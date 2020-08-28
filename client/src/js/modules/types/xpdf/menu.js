@@ -8,6 +8,7 @@ define([], function() {
         menu: {
             dc: 'View All Data',
             visits: 'Visits',
+            notebook: 'Notebook Test',
             shipments: 'Shipments',
             assign: 'Assign Sample Changers',
             containers: 'Sample Changers',

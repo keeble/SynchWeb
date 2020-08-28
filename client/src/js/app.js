@@ -218,6 +218,7 @@ function(Backbone, Marionette, _, $, HeaderView, SideBarView, DialogRegion, Logi
         'modules/mc/router',
         'modules/admin/router',
         'modules/imaging/router',
+        'modules/notebook/router',
         'modules/types/em/relion/router',
         'modules/types/em/scipion/router',
     ], function() {

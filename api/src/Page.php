@@ -493,6 +493,9 @@ class Page
                                 if (preg_match('/^'.$v.'$/m', $request[$k])) {
                                     $parsed[$k] = $v == '.*' ? $purifier->purify($request[$k]) : $request[$k];
                                 }
+                                if($k == 'content' && strpos($_SERVER['REQUEST_URI'], 'notebook') > -1){ // ONLY FOR NOTEBOOK CONTENT!!
+                                    $parsed[$k] = $request[$k];
+                                }
                             }
                         }
                     }
