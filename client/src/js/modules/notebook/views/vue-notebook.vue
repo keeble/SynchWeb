@@ -40,15 +40,17 @@
     import 'tinymce/plugins/autoresize';
     import 'tinymce/plugins/lists';
     import 'tinymce/plugins/fullscreen';
-    import 'tinymce/plugins/preview';
     import 'tinymce/plugins/paste';
+    import 'tinymce/plugins/preview';
+    import 'tinymce/plugins/print';
+    import 'tinymce/plugins/table';
     import 'tinymce/plugins/template';
 
     import Editor from '@tinymce/tinymce-vue'
 
     const config = {
         min_height: 500,
-        plugins: 'wordcount image autoresize lists fullscreen preview paste template',
+        plugins: 'wordcount image autoresize lists fullscreen paste preview print table template',
         toolbar: 'preview fullscreen | undo redo | fontselect fontsizeselect formatselect forecolor | bold italic strikethrough | alignleft aligncenter alignright alignjustify | outdent indent | bullist numlist',
         file_picker_types: 'image',
         paste_data_images: true,
