@@ -269,6 +269,7 @@ class MySQL extends DatabaseParent implements DatabaseInterface
             'ContainerRegistry',
             'ContainerRegistry_has_Proposal',
             'ContainerReport',
+            'ContainerType',
 
 
             'ComponentLattice',
@@ -322,6 +323,10 @@ class MySQL extends DatabaseParent implements DatabaseInterface
 
             'BeamCalendar',
             'SpaceGroup',
+
+            // Columns for SAXS samples
+            'ExperimentType',
+            'PurificationColumn',
 
             // MR
             'MXMRRun',

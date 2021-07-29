@@ -78,6 +78,7 @@ class Shipment extends Page
                               'DELIVERYAGENT_AGENTCODE' => '[\w-]+',
                               'SAFETYLEVEL' => '\w+',
                               'DEWARS' => '\d+',
+                              'DEWAR_TYPE' => '\w+',
                               //'FIRSTEXPERIMENTID' => '\w+\d+-\d+',
                               'COMMENTS' => '.*',
                               
@@ -89,6 +90,7 @@ class Shipment extends Page
                               'DEWARID' => '\d+',
                               'CAPACITY' => '\d+',
                               'CONTAINERTYPE' => '\w+',
+                              'CONTAINERTYPE' => '[\w+|\+|\-]+', // Need to include "B21_8+1"
                               'NAME' => '([\w-])+',
                               'SCHEDULEID' => '\d+',
                               'SCREENID' => '\d+',
@@ -112,7 +114,6 @@ class Shipment extends Page
                               'RETURN' => '\d+',
                               'DECLAREDVALUE' => '\d+',
                               'DESCRIPTION' => '.*',
-                              'DEWARS' => '\d+',
 
                               'PHYSICALLOCATION' => '[\s|\w|-]+',
                               'READYBYTIME' => '\d\d:\d\d',
@@ -179,7 +180,7 @@ class Shipment extends Page
                               array('/containers/history', 'get', '_container_history'),
                               array('/containers/reports(/:CONTAINERREPORTID)', 'get', '_get_container_reports'),
                               array('/containers/reports', 'post', '_add_container_report'),
-                              
+                              array('/containers/types', 'get', '_get_container_types'),
                               array('/containers/notify/:BARCODE', 'get', '_notify_container'),
 
                               array('/cache/:name', 'put', '_session_cache'),
@@ -1031,7 +1032,7 @@ class Shipment extends Page
                 if (array_key_exists($this->arg('sort_by'), $cols)) $order = $cols[$this->arg('sort_by')].' '.$dir;
             }
             
-            $dewars = $this->db->paginate("SELECT CONCAT(p.proposalcode, p.proposalnumber) as prop, CONCAT(CONCAT(CONCAT(p.proposalcode, p.proposalnumber), '-'), se.visit_number) as firstexperiment, r.labcontactid, se.beamlineoperator as localcontact, se.beamlinename, TO_CHAR(se.startdate, 'HH24:MI DD-MM-YYYY') as firstexperimentst, d.firstexperimentid, s.shippingid, s.shippingname, d.facilitycode, count(c.containerid) as ccount, (case when se.visit_number > 0 then (CONCAT(CONCAT(CONCAT(p.proposalcode, p.proposalnumber), '-'), se.visit_number)) else '' end) as exp, d.code, d.barcode, d.storagelocation, d.dewarstatus, d.dewarid,  d.trackingnumbertosynchrotron, d.trackingnumberfromsynchrotron, s.deliveryagent_agentname, d.weight, d.deliveryagent_barcode, GROUP_CONCAT(c.code SEPARATOR ', ') as containers, s.sendinglabcontactid, s.returnlabcontactid
+            $dewars = $this->db->paginate("SELECT CONCAT(p.proposalcode, p.proposalnumber) as prop, CONCAT(CONCAT(CONCAT(p.proposalcode, p.proposalnumber), '-'), se.visit_number) as firstexperiment, r.labcontactid, se.beamlineoperator as localcontact, se.beamlinename, TO_CHAR(se.startdate, 'HH24:MI DD-MM-YYYY') as firstexperimentst, d.firstexperimentid, s.shippingid, s.shippingname, d.facilitycode, count(c.containerid) as ccount, (case when se.visit_number > 0 then (CONCAT(CONCAT(CONCAT(p.proposalcode, p.proposalnumber), '-'), se.visit_number)) else '' end) as exp, d.code, d.barcode, d.storagelocation, d.dewarstatus, d.dewarid,  d.trackingnumbertosynchrotron, d.trackingnumberfromsynchrotron, s.deliveryagent_agentname, d.weight, d.deliveryagent_barcode, d.type as dewar_type, GROUP_CONCAT(c.code SEPARATOR ', ') as containers, s.sendinglabcontactid, s.returnlabcontactid
               FROM dewar d 
               LEFT OUTER JOIN container c ON c.dewarid = d.dewarid 
               INNER JOIN shipping s ON d.shippingid = s.shippingid 
@@ -1056,7 +1057,9 @@ class Shipment extends Page
             if (!$this->has_arg('prop')) $this->_error('No proposal specified');
             if (!$this->has_arg('SHIPPINGID')) $this->_error('No shipping id specified');
             if (!$this->has_arg('CODE')) $this->_error('No dewar name specified');
-            
+
+            $dewar_type = $this->has_arg('DEWAR_TYPE') ? $this->arg('DEWAR_TYPE') : 'Dewar';
+
             $ship = $this->db->pq("SELECT s.shippingid 
               FROM shipping s 
               WHERE s.proposalid = :1 AND s.shippingid = :2", array($this->proposalid,$this->arg('SHIPPINGID')));
@@ -1070,9 +1073,9 @@ class Shipment extends Page
             
             $exp = $this->has_arg('FIRSTEXPERIMENTID') ? $this->arg('FIRSTEXPERIMENTID') : null;
             
-            $this->db->pq("INSERT INTO dewar (dewarid,code,trackingnumbertosynchrotron,trackingnumberfromsynchrotron,shippingid,bltimestamp,dewarstatus,firstexperimentid,facilitycode,weight) 
-              VALUES (s_dewar.nextval,:1,:2,:3,:4,CURRENT_TIMESTAMP,'opened',:5,:6,:7) RETURNING dewarid INTO :id", 
-              array($this->arg('CODE'), $to, $from, $this->arg('SHIPPINGID'), $exp, $fc,$wg));
+            $this->db->pq("INSERT INTO dewar (dewarid,code,trackingnumbertosynchrotron,trackingnumberfromsynchrotron,shippingid,bltimestamp,dewarstatus,firstexperimentid,facilitycode,weight,type) 
+              VALUES (s_dewar.nextval,:1,:2,:3,:4,CURRENT_TIMESTAMP,'opened',:5,:6,:7,:8) RETURNING dewarid INTO :id", 
+              array($this->arg('CODE'), $to, $from, $this->arg('SHIPPINGID'), $exp, $fc,$wg,$dewar_type));
             
             $id = $this->db->id();
             
@@ -1971,7 +1974,8 @@ class Shipment extends Page
             $ct = $this->has_arg('CLOSETIME') ? $this->arg('CLOSETIME') : null;
             $loc = $this->has_arg('PHYSICALLOCATION') ? $this->arg('PHYSICALLOCATION') : null;
 
-            
+            $dewar_type = $this->has_arg('DEWAR_TYPE') ? $this->arg('DEWAR_TYPE') : 'Dewar';
+
             $this->db->pq("INSERT INTO shipping (shippingid, proposalid, shippingname, deliveryagent_agentname, deliveryagent_agentcode, deliveryagent_shippingdate, deliveryagent_deliverydate, bltimestamp, creationdate, comments, sendinglabcontactid, returnlabcontactid, shippingstatus, safetylevel, readybytime, closetime, physicallocation) 
               VALUES (s_shipping.nextval,:1,:2,:3,:4,TO_DATE(:5,'DD-MM-YYYY'), TO_DATE(:6,'DD-MM-YYYY'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,:7,:8,:9,'opened',:10, :11, :12, :13) RETURNING shippingid INTO :id", 
               array($this->proposalid, $this->arg('SHIPPINGNAME'), $an, $ac, $sd, $dd, $com, $this->arg('SENDINGLABCONTACTID'), $this->arg('RETURNLABCONTACTID'), $this->arg('SAFETYLEVEL'), $rt, $ct, $loc));
@@ -1992,9 +1996,9 @@ class Shipment extends Page
                         $fc = $i < sizeof($this->arg('FCODES')) ? $fcs[$i] : ''; 
                         $n = $fc ? $fc : ('Dewar'.($i+1));
                         
-                        $this->db->pq("INSERT INTO dewar (dewarid,code,shippingid,bltimestamp,dewarstatus,firstexperimentid,facilitycode,weight) 
-                          VALUES (s_dewar.nextval,:1,:2,CURRENT_TIMESTAMP,'opened',:3,:4,$dewar_weight) RETURNING dewarid INTO :id", 
-                          array($n, $sid, $exp, $fc));
+                        $this->db->pq("INSERT INTO dewar (dewarid,code,shippingid,bltimestamp,dewarstatus,firstexperimentid,facilitycode,weight,type) 
+                          VALUES (s_dewar.nextval,:1,:2,CURRENT_TIMESTAMP,'opened',:3,:4,:5,:6) RETURNING dewarid INTO :id", 
+                          array($n, $sid, $exp, $fc, $dewar_weight, $dewar_type));
                         
                         $id = $this->db->id();
                         
@@ -2541,5 +2545,17 @@ class Shipment extends Page
                 // Everything OK, send result
                 $this->_output(array('EMAIL_SENT' => 1));
            }
+        }
+
+        function _get_container_types() {
+          $where = '';
+          // By default only return active container types.
+          // If all param set return everything
+          // TODO - add filter for proposalType
+          if ($this->has_arg('all')) $where .= '1=1';
+          else $where .= 'ct.active = 1';
+
+          $rows = $this->db->pq("SELECT ct.containerTypeId, name, ct.proposalType, ct.capacity, ct.wellPerRow, ct.dropPerWellX, ct.dropPerWellY, ct.dropHeight, ct.dropWidth, ct.wellDrop FROM containertype ct WHERE $where");
+          $this->_output(array('total' => count($rows), 'data' => $rows));
         }
     }

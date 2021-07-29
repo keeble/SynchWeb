@@ -141,6 +141,12 @@ class Sample extends Page
                               'PLANORDER' => '\d',
 
                               'SAMPLEGROUPID' => '\d+',
+                              // Items added for Soft Condensed Matter
+                              'EXPERIMENTTYPEID' => '\d+',
+                              'PURIFICATIONCOLUMNID' => '\d+',
+                              'ROBOTPLATETEMPERATURE' => '-?(0|[1-9]\d*)?(\.\d+)?', // Allows +ve, -ve numbers and decimals
+                              'EXPOSURETEMPERATURE' => '-?(0|[1-9]\d*)?(\.\d+)?', // Allows +ve, -ve numbers and decimals
+
                                );
         
         
@@ -943,7 +949,7 @@ class Sample extends Page
                 if (array_key_exists($this->arg('sort_by'), $cols)) $order = $cols[$this->arg('sort_by')].' '.$dir;
             }
             
-            $rows = $this->db->paginate("SELECT distinct b.blsampleid, b.crystalid, b.screencomponentgroupid, ssp.blsampleid as parentsampleid, ssp.name as parentsample, b.blsubsampleid, count(distinct si.blsampleimageid) as inspections, CONCAT(p.proposalcode,p.proposalnumber) as prop, b.code, b.location, pr.acronym, pr.proteinid, cr.spacegroup,b.comments,b.name,s.shippingname as shipment,s.shippingid,d.dewarid,d.code as dewar, c.code as container, c.containerid, c.samplechangerlocation as sclocation, count(distinct IF(dc.overlap != 0,dc.datacollectionid,NULL)) as sc, count(distinct IF(dc.overlap = 0 AND dc.axisrange = 0,dc.datacollectionid,NULL)) as gr, count(distinct IF(dc.overlap = 0 AND dc.axisrange > 0,dc.datacollectionid,NULL)) as dc, count(distinct so.screeningid) as ai, count(distinct app.autoprocprogramid) as ap, count(distinct r.robotactionid) as r, round(min(st.rankingresolution),2) as scresolution, max(ssw.completeness) as sccompleteness, round(min(apss.resolutionlimithigh),2) as dcresolution, round(max(apss.completeness),1) as dccompleteness, dp.anomalousscatterer, dp.requiredresolution, cr.cell_a, cr.cell_b, cr.cell_c, cr.cell_alpha, cr.cell_beta, cr.cell_gamma, b.packingfraction, b.dimension1, b.dimension2, b.dimension3, b.shape, cr.theoreticaldensity, cr.name as crystal, pr.name as protein, b.looptype, dp.centringmethod, dp.experimentkind, cq.containerqueueid, TO_CHAR(cq.createdtimestamp, 'DD-MM-YYYY HH24:MI') as queuedtimestamp
+            $rows = $this->db->paginate("SELECT distinct b.blsampleid, b.crystalid, b.screencomponentgroupid, ssp.blsampleid as parentsampleid, ssp.name as parentsample, b.blsubsampleid, count(distinct si.blsampleimageid) as inspections, CONCAT(p.proposalcode,p.proposalnumber) as prop, b.code, b.location, pr.acronym, pr.proteinid, cr.spacegroup,b.comments,b.name,s.shippingname as shipment,s.shippingid,d.dewarid,d.code as dewar, c.code as container, c.containerid, c.samplechangerlocation as sclocation, count(distinct IF(dc.overlap != 0,dc.datacollectionid,NULL)) as sc, count(distinct IF(dc.overlap = 0 AND dc.axisrange = 0,dc.datacollectionid,NULL)) as gr, count(distinct IF(dc.overlap = 0 AND dc.axisrange > 0,dc.datacollectionid,NULL)) as dc, count(distinct so.screeningid) as ai, count(distinct app.autoprocprogramid) as ap, count(distinct r.robotactionid) as r, round(min(st.rankingresolution),2) as scresolution, max(ssw.completeness) as sccompleteness, round(min(apss.resolutionlimithigh),2) as dcresolution, round(max(apss.completeness),1) as dccompleteness, dp.anomalousscatterer, dp.requiredresolution, cr.cell_a, cr.cell_b, cr.cell_c, cr.cell_alpha, cr.cell_beta, cr.cell_gamma, b.packingfraction, b.dimension1, b.dimension2, b.dimension3, b.shape, cr.theoreticaldensity, cr.name as crystal, pr.name as protein, b.looptype, dp.centringmethod, dp.experimentkind, dp.robotplatetemperature, dp.exposuretemperature, dp.experimenttypeid, dp.purificationcolumnid, cq.containerqueueid, TO_CHAR(cq.createdtimestamp, 'DD-MM-YYYY HH24:MI') as queuedtimestamp
                                   , $cseq $sseq string_agg(cpr.name) as componentnames, string_agg(cpr.density) as componentdensities
                                   ,string_agg(cpr.proteinid) as componentids, string_agg(cpr.acronym) as componentacronyms, string_agg(cpr.global) as componentglobals, string_agg(chc.abundance) as componentamounts, string_agg(ct.symbol) as componenttypesymbols, b.volume, pct.symbol,ROUND(cr.abundance,3) as abundance, TO_CHAR(b.recordtimestamp, 'DD-MM-YYYY') as recordtimestamp, dp.radiationsensitivity, dp.energy, dp.userpath
                                   
@@ -1043,8 +1049,9 @@ class Sample extends Page
             if (array_key_exists('PROTEINID', $a)) {
                 $this->db->pq("UPDATE crystal set spacegroup=:1,proteinid=:2,cell_a=:3,cell_b=:4,cell_c=:5,cell_alpha=:6,cell_beta=:7,cell_gamma=:8,theoreticaldensity=:9 WHERE crystalid=:10", 
                   array($a['SPACEGROUP'], $a['PROTEINID'], $a['CELL_A'], $a['CELL_B'], $a['CELL_C'], $a['CELL_ALPHA'], $a['CELL_BETA'], $a['CELL_GAMMA'], $a['THEORETICALDENSITY'], $samp['CRYSTALID']));
-                $this->db->pq("UPDATE diffractionplan set anomalousscatterer=:1,requiredresolution=:2, experimentkind=:3, centringmethod=:4, radiationsensitivity=:5, energy=:6, userpath=:7 WHERE diffractionplanid=:8", 
-                  array($a['ANOMALOUSSCATTERER'], $a['REQUIREDRESOLUTION'], $a['EXPERIMENTKIND'], $a['CENTRINGMETHOD'], $a['RADIATIONSENSITIVITY'], $a['ENERGY'], $a['USERPATH'], $samp['DIFFRACTIONPLANID']));
+                $this->db->pq("UPDATE diffractionplan set anomalousscatterer=:1,requiredresolution=:2, experimentkind=:3, centringmethod=:4, radiationsensitivity=:5, energy=:6, userpath=:7, purificationcolumnid=:8, robotplatetemperature=:9, exposuretemperature=:10 WHERE diffractionplanid=:11",
+                  array($a['ANOMALOUSSCATTERER'], $a['REQUIREDRESOLUTION'], $a['EXPERIMENTKIND'], $a['CENTRINGMETHOD'], $a['RADIATIONSENSITIVITY'], $a['ENERGY'], $a['USERPATH'], $a['PURIFICATIONCOLUMNID'], $a['ROBOTPLATETEMPERATURE'], $a['EXPOSURETEMPERATURE'], $samp['DIFFRACTIONPLANID']));
+
             }
 
             $init_comps = explode(',', $samp['COMPONENTIDS']);
@@ -1134,7 +1141,10 @@ class Sample extends Page
                 else $a[$f] = $this->has_arg($f) ? $this->arg($f) : '';
             }
 
-            foreach (array('CENTRINGMETHOD', 'EXPERIMENTKIND', 'RADIATIONSENSITIVITY', 'SCREENCOMPONENTGROUPID', 'BLSUBSAMPLEID', 'COMPONENTIDS', 'COMPONENTAMOUNTS', 'REQUIREDRESOLUTION', 'CELL_A', 'CELL_B', 'CELL_C', 'CELL_ALPHA', 'CELL_BETA', 'CELL_GAMMA', 'VOLUME', 'ABUNDANCE', 'PACKINGFRACTION', 'DIMENSION1', 'DIMENSION2', 'DIMENSION3', 'SHAPE', 'THEORETICALDENSITY', 'LOOPTYPE', 'ENERGY', 'USERPATH') as $f) {
+            foreach (array('CENTRINGMETHOD', 'EXPERIMENTKIND', 'RADIATIONSENSITIVITY', 'SCREENCOMPONENTGROUPID', 'BLSUBSAMPLEID', 'COMPONENTIDS', 'COMPONENTAMOUNTS',
+                            'REQUIREDRESOLUTION', 'CELL_A', 'CELL_B', 'CELL_C', 'CELL_ALPHA', 'CELL_BETA', 'CELL_GAMMA', 'VOLUME', 'ABUNDANCE', 'PACKINGFRACTION',
+                            'DIMENSION1', 'DIMENSION2', 'DIMENSION3', 'SHAPE', 'THEORETICALDENSITY', 'LOOPTYPE', 'ENERGY', 'USERPATH',
+                            'EXPERIMENTTYPEID', 'PURIFICATIONCOLUMNID', 'ROBOTPLATETEMPERATURE', 'EXPOSURETEMPERATURE') as $f) {
                 if ($s) $a[$f] = array_key_exists($f, $s) ? $s[$f] : null;
                 else $a[$f] = $this->has_arg($f) ? $this->arg($f) : null;
             }
@@ -1144,8 +1154,8 @@ class Sample extends Page
 
 
         function _do_add_sample($a) {
-            $this->db->pq("INSERT INTO diffractionplan (diffractionplanid, requiredresolution, anomalousscatterer, centringmethod, experimentkind, radiationsensitivity, energy, userpath) VALUES (s_diffractionplan.nextval, :1, :2, :3, :4, :5, :6, :7) RETURNING diffractionplanid INTO :id", 
-                array($a['REQUIREDRESOLUTION'], $a['ANOMALOUSSCATTERER'], $a['CENTRINGMETHOD'], $a['EXPERIMENTKIND'], $a['RADIATIONSENSITIVITY'], $a['ENERGY'], $a['USERPATH']));
+            $this->db->pq("INSERT INTO diffractionplan (diffractionplanid, requiredresolution, anomalousscatterer, centringmethod, experimentkind, radiationsensitivity, energy, userpath, robotplatetemperature, exposuretemperature, experimenttypeid, purificationcolumnid) VALUES (s_diffrctionplan.nextval, :1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11) RETURNING diffractionplanid INTO :id",
+                array($a['REQUIREDRESOLUTION'], $a['ANOMALOUSSCATTERER'], $a['CENTRINGMETHOD'], $a['EXPERIMENTKIND'], $a['RADIATIONSENSITIVITY'], $a['ENERGY'], $a['USERPATH'], $a['ROBOTPLATETEMPERATURE'], $a['EXPOSURETEMPERATURE'], $a['EXPERIMENTTYPEID'], $a['PURIFICATIONCOLUMNID']));
             $did = $this->db->id();
 
             if (!array_key_exists('CRYSTALID', $a)) {
@@ -1449,7 +1459,7 @@ class Sample extends Page
                 }
             }
 
-            $dfields = array('REQUIREDRESOLUTION', 'ANOMALOUSSCATTERER', 'CENTRINGMETHOD', 'EXPERIMENTKIND', 'RADIATIONSENSITIVITY', 'ENERGY', 'USERPATH');
+            $dfields = array('REQUIREDRESOLUTION', 'ANOMALOUSSCATTERER', 'CENTRINGMETHOD', 'EXPERIMENTKIND', 'RADIATIONSENSITIVITY', 'ENERGY', 'USERPATH', 'ROBOTPLATETEMPERATURE', 'EXPOSURETEMPERATURE', 'EXPERIMENTTYPEID', 'PURIFICATIONCOLUMNID');
             foreach ($dfields as $f) {
                 if ($this->has_arg($f)) {
                     $this->db->pq("UPDATE diffractionplan SET $f=:1 WHERE diffractionplanid=:2", array($this->arg($f), $samp['DIFFRACTIONPLANID']));

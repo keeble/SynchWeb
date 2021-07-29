@@ -256,8 +256,10 @@ define(['backbone',
             this.ui.qwrap.hide()
             this.ui.terms.hide()
 
-            if (app.options.get('facility_courier_countries').length || app.options.get('facility_courier_countries_nde').length) this.ui.free.text('[Free For: '+app.options.get('facility_courier_countries').concat(app.options.get('facility_courier_countries_nde')).sort().join(', ')+']')
-            this.ui.DESCRIPTION.val(app.options.get('package_description'))
+            if (app.options.get('facility_courier_countries').length || app.options.get('facility_courier_countries_nde').length) this.ui.free.text('[Free For: ' + app.options.get('facility_courier_countries').concat(app.options.get('facility_courier_countries_nde')).sort().join(', ') + ']')
+            var packageDescriptions = app.options.get('package_descriptions')
+            var parcelType = 'DEWAR'
+            this.ui.DESCRIPTION.val(packageDescriptions[parcelType])
 
             
 
