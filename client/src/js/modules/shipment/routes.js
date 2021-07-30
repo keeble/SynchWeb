@@ -53,6 +53,8 @@ const ContainerPlanWrapper = () => import(/* webpackChunkName: "shipment" */ 'mo
 const ContainerQueueWrapper = () => import(/* webpackChunkName: "shipment" */ 'modules/shipment/components/container-queue-wrapper.vue')
 
 const DewarsOverviewWrapper = () => import(/* webpackChunkName: "shipment" */ 'modules/shipment/components/dewars-overview-wrapper.vue')
+const ShipmentAddWrapper = () => import(/* webpackChunkName: "shipment" */ 'modules/shipment/components/shipment-add-wrapper.vue')
+const ShipmentViewWrapper = () => import(/* webpackChunkName: "shipment" */ 'modules/shipment/components/shipment-view-wrapper.vue')
 
 // Initialize MarionetteApplication if not already existing
 let application = MarionetteApplication.getInstance()
@@ -166,9 +168,9 @@ const routes = [
       // Note that we need props to be a function so we pass in shippingComments correctly
       {
         path: 'add',
-        component: MarionetteView,
+        name: 'shipment-add',
+        component: ShipmentAddWrapper,
         props: route => ({
-          mview: ShipmentAddView,
           breadcrumbs: [bc, { title: 'Add New Shipment' }],
           options: {
             comments: shipmentComments
@@ -200,14 +202,11 @@ const routes = [
       },
       {
         path: 'sid/:sid',
-        component: MarionetteView,
+        name: 'shipment-view',
+        component: ShipmentViewWrapper,
         props: route => ({
-          mview: ShipmentView,
-          breadcrumbs: [bc],
-          breadcrumb_tags: ['SHIPPINGNAME'], // If we find a model append to the bc
-          options: {
-            model: new Shipment({ SHIPPINGID: route.params.sid })
-          }
+            breadcrumbs: [bc],
+            sid: +route.params.sid
         }),
         beforeEnter: (to, from, next) => {
           // Call the loading state here because we are finding the proposal based on this contact id
@@ -484,18 +483,15 @@ const routes = [
       app.loading()
 
       const lookupProposal = store.dispatch('proposal/proposalLookup', { field: 'DEWARID', value: +to.params.did } )
+      const lookupDewarModel = lookupDewar(to.params.did)
 
-      lookupProposal.then( () => {
-        lookupDewar(to.params.did).then( (model) => {
+      Promise.all([lookupProposal, lookupDewarModel]).then( (values) => {
+          console.log("Proposal and Dewar lookup ok : " + JSON.stringify(values))
           next()
-        }, (err) => {
+        }, () => {
           store.commit('notifications/addNotification', {title: 'Error', message: 'Dewar not found', level: 'error'})
           next('/404')
-        })
-      }, (err) => {
-        store.commit('notifications/addNotification', {title: 'Error', message: 'Proposal not found', level: 'error'})
-        next('/404')
-      }).finally( () => {
+        }).finally( () => {
         // In either case we can stop the loading animation
         app.loading(false)
       })
