@@ -1,13 +1,16 @@
 <template>
     <section>
         <marionette-view
-            v-if="ready"
+            v-if="showMarionetteView"
             :key="$route.fullPath"
             :options="options"
             :preloaded="true"
             :mview="mview"
             :breadcrumbs="bc">
         </marionette-view>
+
+        <component v-else :is="componentView" :dewarModel="model"
+        />
     </section>
 </template>
 
@@ -17,17 +20,21 @@
 * Router guard determines if we can still add content to the proposal
 * Then displays the addcontainer view specific to a proposal type
 */
+import EventBus from 'app/components/utils/event-bus.js'
 import MarionetteView from 'app/views/marionette/marionette-wrapper.vue'
+import SaxsContainerAdd from 'modules/types/saxs/shipment/views/container-add.vue'
 
 import { ContainerAddMap } from 'modules/shipment/components/container-map'
 import Dewar from 'models/dewar'
 
 import store from 'app/store/store'
+import { mapState } from 'vuex'
 
 export default {
     name: 'container-add-wrapper',
     components: {
-        'marionette-view': MarionetteView
+        'marionette-view': MarionetteView,
+        'saxs-container-add': SaxsContainerAdd,
     },
     props: {
         'did': Number,
@@ -35,13 +42,22 @@ export default {
     },
     data: function() {
         return {
-            ready: false,
+            showMarionetteView: false,
             mview: null,
             model: null,
-            collection: null,
-            params: null,
-            queryParams: null,
             bc : [],
+            componentView: '',
+            // At some point we may replace the original shipment marionette view in which case this can be removed
+            // If we have no valid marionette view, pick from this proposaltype list
+            views: {
+                'saxs': 'saxs-container-add'
+            }
+        }
+    },
+    watch: {
+        // If not using a marionette view, signal to update breadcrumbs
+        componentView: function() {
+            EventBus.$emit('bcChange', this.bc)
         }
     },
     computed: {
@@ -51,27 +67,24 @@ export default {
                 visit: this.visit
             }
         },
-        proposalType : function() {
-            return this.$store.state.proposal.proposalType
-        }
+        ...mapState('proposal', { 'proposalType': 'proposalType' })
     },
     created: function() {
-        console.log("Container Add Created for proposal Type = " + this.proposalType)
-
         this.bc = [{ title: 'Shipments', url: '/shipments' }]
 
         this.model = new Dewar({ DEWARID: this.did })
 
         this.getDewar().then( (val) => {
             this.mview = ContainerAddMap[this.proposalType] ? ContainerAddMap[this.proposalType].view : ContainerAddMap['default'].view
-            // Update the breadcrumbs
-            this.bc.push({ title: this.model.get('SHIPPINGNAME'), url: '/shipments/sid/'+this.model.get('SHIPPINGID') })
-            this.bc.push({ title: 'Containers' })
-            this.bc.push({ title: 'Add Container'})
+
+            this.setBreadcrumbs()            
         }, (error) => {
             console.log("Error getting dewar model " + error.msg)
             app.alert({ title: 'No such dewar', message: error.msg})
-        }).finally( () => { this.ready = true }) // Only render when complete
+        }).finally( () => {
+            if (this.mview) this.showMarionetteView = true
+            else this.componentView = this.views[this.proposalType]
+        })
     },
     methods: {
         // We get the model here because the view we render depends on the container details
@@ -79,9 +92,7 @@ export default {
             // Wrap the backbone request into a promise so we can wait for the result
             return new Promise((resolve) => {
                 this.model.fetch({
-                    success: function(model) {
-                        console.log("Container Add got model " + JSON.stringify(model))
-
+                    success: function() {
                         resolve(true)
                     },
                     // Original controller had no error condition...
@@ -92,6 +103,12 @@ export default {
 
             })
         },
+        setBreadcrumbs: function() {
+            // Update the breadcrumbs
+            this.bc.push({ title: this.model.get('SHIPPINGNAME'), url: '/shipments/sid/'+this.model.get('SHIPPINGID') })
+            this.bc.push({ title: 'Containers' })
+            this.bc.push({ title: 'Add Container'})
+        }
     },
     beforeRouteEnter: (to, from, next) => {
       // Lookup the proposal first to make sure we can still add to it
