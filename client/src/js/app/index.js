@@ -1,7 +1,5 @@
-const Styles = require('css/main.scss');
-const FontAwesome = require('font-awesome/css/font-awesome.css');
-
 import Vue from 'vue'
+import VeeValidate from 'vee-validate'
 
 import Main from 'app/layouts/main.vue'
 import MaintenanceView from 'app/layouts/maintenance.vue'
@@ -11,6 +9,8 @@ import router from 'app/router/router'
 import MarionetteApp from 'app/marionette-application.js'
 
 import config from 'config.json'
+
+Vue.use(VeeValidate)
 
 Vue.config.productionTip = false
 Vue.config.devtools = !config.production

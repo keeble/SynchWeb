@@ -41,7 +41,7 @@ Component will emit a save event when the value changes
         @click="onEdit"
         @mouseover="showEditIcon = true"
         @mouseleave="showEditIcon = false">
-      {{ value }}
+      {{ value || placeholderText }}
       <span v-show="showEditIcon">
         <i :class="['fa', 'fa-edit']"></i> Edit
       </span>
