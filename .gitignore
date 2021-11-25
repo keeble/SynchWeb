@@ -26,3 +26,5 @@ client/dist
 
 api/config.php
 api/vendor
+
+.idea/
