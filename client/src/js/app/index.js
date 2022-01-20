@@ -1,3 +1,6 @@
+var Styles = require('css/main.scss')
+var FontAwesome = require('font-awesome/css/font-awesome.css')
+
 import Vue from 'vue'
 import VeeValidate from 'vee-validate'
 
@@ -28,7 +31,6 @@ const vm = new Vue({
 
     // Start the Marionette application
     let application = MarionetteApp.getInstance()
-  
     application.start()
   },
 }).$mount('#synchweb-app')
