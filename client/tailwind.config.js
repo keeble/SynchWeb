@@ -128,6 +128,11 @@ module.exports = {
         'table-pages-disable-color': '#ababab',
 // Plot
         'plot-legend-background': '#dddddd',
+
+// Sample Groups Color Theme
+        'sample-group-added-light': '#f4e7Ba',
+        'sample-group-added-dark': '#d9bf98',
+
       }
     }
   },

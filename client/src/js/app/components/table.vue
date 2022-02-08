@@ -3,7 +3,7 @@ Table component
 Pass in headers array with key and title properties, example:
 headers: [{key: 'NAME', title: 'Name'}, {key: 'ID', title: 'Id'}]
 data: [{NAME: 'Alice', ID: 1}, {NAME: 'Bob', ID: 2}]
-"title" is column title, "key" is attribte that provides the data
+"title" is column title, "key" is attribute that provides the data
 Slots:
 - content = override row with <td> items e.g. for form inputs. "row" data are provided to the slot
 - actions = place to store buttons in last column. Specify a title for the actions column to show them.
@@ -27,18 +27,20 @@ TODO - move relevant styles to this component style section
 
         <!-- Change row[header.key] to row.get(header.key) if using Backbone models -->
         <tbody v-if="data && data.length > 0">
-          <tr
-            v-for="(row, index) in data"
-            :key="index"
-            v-on:click="$emit('row-clicked', row)">
+          <slot :data="data" :row-clicked="rowClicked" :actions="actions" :headers="headers">
+            <tr
+              v-for="(row, index) in data"
+              :key="index"
+              v-on:click="$emit('row-clicked', row)">
 
-            <!-- Default row layout override with the content slot if you need items like form inputs-->
-            <slot name="content" v-bind:row="row">
-              <td v-for="(header, index) in headers" :key="index">{{row[header.key]}}</td>
-            </slot>
+              <!-- Default row layout override with the content slot if you need items like form inputs-->
+              <slot name="content" :row="row">
+                <td v-for="(header, index) in headers" :key="index">{{row[header.key]}}</td>
+              </slot>
 
-            <td v-if="actions"><slot name="actions" v-bind:row="row"></slot></td>
-          </tr>
+              <td v-if="actions"><slot name="actions" v-bind:row="row"></slot></td>
+            </tr>
+          </slot>
         </tbody>
 
         <tbody v-else>
@@ -72,6 +74,11 @@ export default {
     'actions': {
       type: String,
       default: ''
+    }
+  },
+  methods: {
+    rowClicked(row) {
+      this.$emit('row-clicked', row)
     }
   }
 }
