@@ -16,13 +16,15 @@ TODO - move relevant styles to this component style section
   <div class="content">
     <div class="table">
       <table class="vue-table">
-
         <thead>
-          <th
-            v-for="(header,index) in headers" :key="index"
-            class=""
-            @click="$emit('sort-by', header.key)">{{header.title}}</th>
-          <th v-if="actions">{{actions}}</th>
+          <slot name="table-headers" :headers="headers" :sort-by="sortHeader" :actions="actions">
+            <th
+              v-for="(header,index) in headers" :key="index"
+              class=""
+              @click="sortHeader(header)">{{header.title}}</th>
+            <th v-if="actions">{{actions}}</th>
+
+          </slot>
         </thead>
 
         <!-- Change row[header.key] to row.get(header.key) if using Backbone models -->
@@ -79,6 +81,9 @@ export default {
   methods: {
     rowClicked(row) {
       this.$emit('row-clicked', row)
+    },
+    sortHeader(header) {
+      this.$emit('sort-by', header.key)
     }
   }
 }

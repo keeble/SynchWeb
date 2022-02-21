@@ -41,7 +41,7 @@ export default {
   name: "BaseInputCheckbox",
   props: {
     value: { // Passed in automatically if v-model used
-      type: String,
+      type: [String, Boolean, Number],
       required: true
     },
     id: {
@@ -79,7 +79,7 @@ export default {
   },
   watch: {
     editable: function(value) {
-      if (value == false) this.showEditIcon = false
+      if (!value) this.showEditIcon = false
     }
   },
   created() {
@@ -117,7 +117,7 @@ export default {
     },
     onEnter(event) {
       // If we are in inline edit mode - save the model on enter (key = 13)
-      if (this.inline && event.keyCode == 13) this.onSave()
+      if (this.inline && event.keyCode === 13) this.onSave()
     },
   },
 };
