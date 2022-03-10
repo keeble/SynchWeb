@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import Backbone from 'backbone'
 
 // VueX modules
 // TODO - adopt vue-enterprise-boiler plate design
@@ -59,14 +60,14 @@ const store = new Vuex.Store({
       app.options = options
     },
     setHelp(state, helpFlag) {
-      state.help = helpFlag ? true : false
+      state.help = !!helpFlag
       sessionStorage.setItem('ispyb_help', state.help)
     },
     //
     // Loading screen
     //
     loading(state, status) {
-      state.isLoading = status ? true : false
+      state.isLoading = !!status
     },
   },
   actions: {
@@ -172,12 +173,12 @@ const store = new Vuex.Store({
 
       return new Promise((resolve, reject) => {
         model.fetch({
-          success: function(model, response, options) {
+          success: function(model) {
             // Could extend to return the response/options
             resolve(model)
           },
 
-          error: function(model, response, options) {
+          error: function(model, response) {
             let err = response.responseJSON || {status: 400, message: 'Error getting model'}
             reject(err)
           },
@@ -192,7 +193,7 @@ const store = new Vuex.Store({
     // Example: store.dispatch('saveModel', {model: myModel, attributes: myAttributes})
     saveModel(context, {model, attributes}) {
       // If we have attributes, assume a patch request
-      let patch = attributes ? true : false
+      let patch = !!attributes
       let attrs = attributes || {}
 
       return new Promise((resolve, reject) => {
@@ -209,6 +210,22 @@ const store = new Vuex.Store({
         })
       })
     },
+
+    postRequest({ state }, { url, data }) {
+      return new Promise((resolve, reject) => {
+        Backbone.ajax({
+          url,
+          method: 'POST',
+          data,
+          success(resp) {
+            resolve(resp)
+          },
+          error(error) {
+            reject(error)
+          }
+        })
+      })
+    }
   },
   getters: {
     sso: state => state.auth.cas_sso,

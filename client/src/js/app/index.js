@@ -2,6 +2,7 @@ var Styles = require('css/main.scss')
 var FontAwesome = require('font-awesome/css/font-awesome.css')
 
 import Vue from 'vue'
+import PortalVue from 'portal-vue'
 
 import Main from 'app/layouts/main.vue'
 import MaintenanceView from 'app/layouts/maintenance.vue'
@@ -13,6 +14,9 @@ import MarionetteApp from 'app/marionette-application.js'
 import config from 'config.json'
 
 Vue.config.productionTip = false
+Vue.config.devtools = !config.production
+
+Vue.use(PortalVue)
 
 
 const vm = new Vue({
@@ -37,3 +41,5 @@ const vm = new Vue({
 if (window.Cypress) {
   window.vm = vm
 }
+
+module.hot.accept()
