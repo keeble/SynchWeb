@@ -13,6 +13,7 @@ import MarionetteApp from 'app/marionette-application.js'
 import config from 'config.json'
 
 Vue.config.productionTip = false
+Vue.config.devtools = !config.production
 
 
 const vm = new Vue({
@@ -37,3 +38,5 @@ const vm = new Vue({
 if (window.Cypress) {
   window.vm = vm
 }
+
+module.hot.accept()

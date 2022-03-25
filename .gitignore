@@ -26,3 +26,7 @@ client/dist
 
 api/config.php
 api/vendor
+
+.idea/
+client/index.html
+api/src/MockUAS.php
