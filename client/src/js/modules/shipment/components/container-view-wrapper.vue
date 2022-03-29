@@ -59,11 +59,8 @@ export default {
         }
     },
     created: function() {
-        console.log("Container View Created for proposal Type = " + this.proposalType)
-
         // Determine the marionette view constructor we need based on the type
         // The title is based on the proposal type
-        let title = ContainerViewMap[this.proposalType] ? ContainerViewMap[this.proposalType].title : 'Container'
 
         this.bc = [{ title: 'Shipments', url: '/shipments' }]
 
@@ -71,7 +68,6 @@ export default {
         this.model = new Container({ CONTAINERID: this.cid })
 
         this.getContainer().then( (isPlate) => {
-            console.log("Container model is plate: " + isPlate)
             if (isPlate) {
                 this.mview = ContainerPlateView
                 this.params = { iid: this.iid, sid: this.sid }
@@ -117,7 +113,7 @@ export default {
             // This is the current logic to determine the plate type
             // Anything other than Box, Puck or PCRStrip
             // TODO - get container types from data base
-            let is_plate = ['box', 'puck', 'pcrstrip', null].indexOf(containerType) == -1 && containerType.indexOf('puck') == -1
+            let is_plate = ['box', 'puck', 'pcrstrip', null].indexOf(containerType) === -1 && containerType.indexOf('puck') === -1
 
             // Also disclude anything with an Xpdf prefix...
             if (is_plate && containerType.includes('xpdf')) is_plate = false
